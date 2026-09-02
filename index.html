@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Portal - Fall Semester 2026</title>
+    <title>Student Portal - Fall 2026</title>
     <style>
-        /* --- SCHOOL THEME --- */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
@@ -13,7 +12,7 @@
             color: #333;
         }
         .navbar {
-            background-color: #1a4d8c; /* Generic school blue */
+            background-color: #1a4d8c;
             color: white;
             padding: 10px 20px;
             display: flex;
@@ -34,8 +33,7 @@
         ul { list-style: none; padding: 0; }
         li { padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
         
-        /* --- HIDDEN WIDGET STYLES --- */
-        /* Looks like a "System Status" or "Cloud Sync" widget */
+        /* Widget Styles */
         .cloud-widget {
             position: fixed;
             bottom: 20px;
@@ -46,7 +44,7 @@
             border-radius: 6px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             z-index: 5000;
-            display: none; /* Hidden until hovered or clicked */
+            display: none;
             flex-direction: column;
         }
         .widget-header {
@@ -89,29 +87,7 @@
             margin-top: 10px;
         }
 
-        /* --- FULLSCREEN OVERLAY --- */
-        .fullscreen-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: white;
-            z-index: 10000;
-        }
-        .fs-header {
-            background: #f8f9fa;
-            padding: 10px 20px;
-            border-bottom: 1px solid #ddd;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .fs-close {
-            background: #dc3545; color: white; border: none;
-            padding: 5px 15px; border-radius: 4px; cursor: pointer;
-        }
-        .fs-frame { width: 100%; height: calc(100% - 50px); border: none; }
-
-        /* Trigger Button (The "Cloud Sync" Icon) */
+        /* Trigger Button */
         .cloud-trigger {
             position: fixed;
             bottom: 25px;
@@ -131,6 +107,143 @@
             color: #666;
         }
         .cloud-trigger:hover { background: #f0f0f0; }
+
+        /* --- MEME MODE STYLES --- */
+        #memeOverlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 20000;
+            pointer-events: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #000; /* Fallback */
+        }
+        
+        .meme-bg {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0;
+            background: radial-gradient(circle, #ff0000 0%, #000000 100%);
+            animation: flashBg 0.2s infinite;
+        }
+
+        @keyframes flashBg {
+            0% { background: radial-gradient(circle, #ff0000 0%, #000000 100%); }
+            50% { background: radial-gradient(circle, #0000ff 0%, #ffffff 100%); }
+            100% { background: radial-gradient(circle, #ff0000 0%, #000000 100%); }
+        }
+
+        .meme-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        /* Charlie Image Container */
+        .charlie-wrapper {
+            position: relative;
+            width: 350px;
+            height: 450px;
+            animation: shake 0.5s infinite;
+        }
+
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
+        .charlie-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border: 5px solid #fff;
+            box-shadow: 0 0 30px #ff0000;
+            z-index: 2;
+            position: relative;
+        }
+
+        /* Laser Eyes */
+        .laser-container {
+            position: absolute;
+            top: 32%; /* Adjust to align with eyes */
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 10px;
+            z-index: 3;
+        }
+        .laser {
+            position: absolute;
+            top: 50%;
+            height: 4px;
+            width: 150px;
+            background: #ff0000;
+            box-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000, 0 0 40px #ff0000;
+        }
+        .laser.left {
+            right: 50%;
+            transform-origin: right center;
+            animation: laserPulse 0.1s infinite alternate;
+        }
+        .laser.right {
+            left: 50%;
+            transform-origin: left center;
+            animation: laserPulse 0.1s infinite alternate;
+        }
+
+        @keyframes laserPulse {
+            0% { opacity: 0.8; width: 150px; }
+            100% { opacity: 1; width: 200px; }
+        }
+
+        /* Fire Effect at Bottom */
+        .fire-effect {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(to top, #ff4500, #ffff00, transparent);
+            opacity: 0.7;
+            animation: fireFlicker 0.1s infinite alternate;
+            z-index: 1;
+        }
+
+        @keyframes fireFlicker {
+            0% { opacity: 0.5; transform: scaleY(1); }
+            100% { opacity: 0.9; transform: scaleY(1.1); }
+        }
+
+        .close-meme {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: red;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            z-index: 4;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
     </style>
 </head>
 <body>
@@ -147,13 +260,8 @@
             <ul>
                 <li><strong>History:</strong> Essay on the Industrial Revolution (Due: Sept 4)</li>
                 <li><strong>Math:</strong> Calculus Problem Set 3 (Due: Sept 6)</li>
-                <li><strong>Science:</strong> Lab Report: Photosynthesis (Due: Sept 8)</li>
+                <li><strong>Science:</strong> Lab Report on Cell Structure (Due: Sept 8)</li>
             </ul>
-        </div>
-        <div class="card">
-            <h2>News & Announcements</h2>
-            <p><strong>Sports:</strong> Football tryouts start Monday. Report to the gym at 3:30 PM.</p>
-            <p><strong>Library:</strong> Quiet hours extended until 8 PM during exam week.</p>
         </div>
     </div>
 
@@ -167,19 +275,37 @@
             <span style="font-size: 0.7rem; color: green;">● Online</span>
         </div>
         <div class="widget-body">
-            <input type="text" class="cloud-input" id="cloudInput" placeholder="Enter URL (e.g. discord.com)">
+            <input type="text" class="cloud-input" id="cloudInput" placeholder="Enter URL (e.g. google.com)">
             <button class="cloud-btn" id="cloudBtn">Sync Resource</button>
             <iframe class="mini-frame" id="miniFrame" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
         </div>
     </div>
 
     <!-- Fullscreen Mode -->
-    <div class="fullscreen-overlay" id="fsOverlay">
-        <div class="fs-header">
+    <div class="fullscreen-overlay" id="fsOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:10000;">
+        <div class="fs-header" style="background:#f8f9fa; padding:10px 20px; border-bottom:1px solid #ddd; display:flex; justify-content:space-between;">
             <span id="fsTitle">Resource Viewer</span>
-            <button class="fs-close" id="fsClose">Close</button>
+            <button class="fs-close" id="fsClose" style="background:#dc3545; color:white; border:none; padding:5px 15px; border-radius:4px; cursor:pointer;">Close</button>
         </div>
-        <iframe class="fs-frame" id="fsFrame"></iframe>
+        <iframe class="fs-frame" id="fsFrame" style="width:100%; height:calc(100% - 50px); border:none;"></iframe>
+    </div>
+
+    <!-- MEME OVERLAY -->
+    <div id="memeOverlay">
+        <button class="close-meme" onclick="closeMeme()">X</button>
+        <div class="meme-bg"></div>
+        <div class="meme-content">
+            <div class="charlie-wrapper">
+                <!-- Specific Charlie Kirk Image -->
+                <img src="https://i.imgur.com/8ZzQvLX.png" class="charlie-img" alt="Charlie Kirk">
+                
+                <div class="laser-container">
+                    <div class="laser left"></div>
+                    <div class="laser right"></div>
+                </div>
+            </div>
+        </div>
+        <div class="fire-effect"></div>
     </div>
 
     <script>
@@ -194,87 +320,57 @@
         const fsClose = document.getElementById('fsClose');
         const fsTitle = document.getElementById('fsTitle');
 
-        // Toggle Widget Visibility
+        const memeOverlay = document.getElementById('memeOverlay');
+
+        // Toggle Widget
         trigger.addEventListener('click', () => {
             widget.style.display = widget.style.display === 'flex' ? 'none' : 'flex';
         });
 
-        // Proxy Logic with Fallback
-        async function fetchProxy(url) {
-            if (!url.startsWith('http')) url = 'https://' + url;
-            
-            // 1. Try Google URL Shortener API (Often whitelisted)
-            try {
-                const resp = await fetch(`https://www.googleapis.com/urlshortener/v1?url=${encodeURIComponent(url)}`, {
-                    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
-                });
-                // Note: Google API returns JSON, we might need to follow the redirect or use the short URL.
-                // Actually, Google API is just for shortening. Let's use Cloudflare's API directly but with custom headers.
-                throw new Error("Google API doesn't proxy content directly"); 
-            } catch (e) {
-                // 2. Fallback to Cloudflare (Better headers)
-                try {
-                    const cfResp = await fetch(`https://api.cloudflare.com/client/v4/accounts/${YOUR_ACCOUNT_ID}/pages/functions/proxy?url=${encodeURIComponent(url)}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                        },
-                        body: JSON.stringify({ url: url })
-                    });
-                    // If you don't have a Cloudflare account, stick to the next one.
-                } catch (e2) {
-                    // 3. Final Fallback: Use AllOrigins but with a browser User-Agent
-                    const finalResp = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
-                    const data = await finalResp.json();
-                    
-                    if (data.contents) {
-                        renderContent(data.contents);
-                    } else {
-                        // Direct raw fallback
-                        mini.src = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-                        mini.style.display = 'block';
-                    }
-                }
-            }
+        // Meme Logic - ALWAYS TRIGGERS
+        function activateMeme() {
+            memeOverlay.style.display = 'flex';
         }
 
-        // Better Proxy Function using Cloudflare's public gateway if available, or standard AllOrigins with headers
+        function closeMeme() {
+            memeOverlay.style.display = 'none';
+        }
+
+        // Proxy Logic
         async function loadContent(targetUrl) {
             if (!targetUrl) return;
             if (!targetUrl.startsWith('http')) targetUrl = 'https://' + targetUrl;
 
             mini.style.display = 'none';
             mini.src = '';
-            
+
+            // TRIGGER MEME ON ANY INPUT
+            activateMeme();
+
+            // Still load the URL in the background (optional, so it looks real)
             try {
-                // Try Cloudflare's public proxy first (if you have an account)
-                // Otherwise, use this reliable alternative:
                 const resp = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`, {
-                    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
+                    headers: { 'User-Agent': 'Mozilla/5.0' }
                 });
                 const data = await resp.json();
-                
                 if (data.contents) {
                     const doc = mini.contentWindow.document;
                     doc.open();
                     doc.write(data.contents);
                     doc.close();
-                    mini.style.display = 'block';
                 } else {
-                    throw new Error("Empty");
+                    mini.src = targetUrl;
                 }
-            } catch (err) {
-                // Fallback to raw
-                mini.src = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
-                mini.style.display = 'block';
+            } catch (e) {
+                mini.src = targetUrl;
             }
+            mini.style.display = 'block';
         }
 
         btn.addEventListener('click', () => loadContent(input.value));
         
         // Fullscreen logic
-        btn.addEventListener('dblclick', () => { // Double click to fullscreen
+        btn.addEventListener('dblclick', () => {
             if (mini.style.display === 'block') {
                 overlay.style.display = 'block';
                 fsFrame.src = mini.src;
@@ -286,7 +382,6 @@
             overlay.style.display = 'none';
             fsFrame.src = '';
         });
-
     </script>
 </body>
 </html>
