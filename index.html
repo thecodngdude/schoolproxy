@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Proxy Fix 408/Abort</title>
+    <title>Fast Proxy</title>
     <style>
         body { margin: 0; font-family: sans-serif; background: #1a1a1a; color: #fff; display: flex; flex-direction: column; height: 100vh; }
         .header { padding: 1rem; background: #252525; border-bottom: 1px solid #333; display: flex; gap: 10px; }
@@ -40,12 +40,12 @@
         loader.style.display = 'block';
         errorMsg.style.display = 'none';
         
-        // Use allorigins.win with JSON endpoint
-        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+        // Use corsproxy.io which returns RAW HTML (not JSON)
+        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
 
-        // Increase timeout to 30 seconds
+        // Shorter timeout (15s is usually enough for corsproxy.io)
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
 
         try {
             const response = await fetch(proxyUrl, { signal: controller.signal });
@@ -53,11 +53,10 @@
 
             if (!response.ok) throw new Error(`Proxy Error: ${response.status}`);
             
-            const data = await response.json();
+            // corsproxy.io returns raw text, so we use .text()
+            const html = await response.text();
             
-            if (!data.contents) throw new Error("No content returned");
-            
-            iframe.srcdoc = data.contents;
+            iframe.srcdoc = html;
             loader.style.display = 'none';
             
         } catch (err) {
@@ -65,14 +64,13 @@
             loader.style.display = 'none';
             errorMsg.style.display = 'block';
             
-            // Provide specific feedback
             if (err.name === 'AbortError') {
-                errorMsg.textContent = `Timeout: The proxy took too long (>30s). Try a simpler site like example.com.`;
+                errorMsg.textContent = `Timeout: The proxy took too long. Try a simpler site like example.com.`;
             } else {
                 errorMsg.textContent = `Failed: ${err.message}`;
             }
             
-            // Fallback: Try direct iframe load (might work if the site allows it)
+            // Fallback: Try direct iframe load
             iframe.src = url;
         }
     }
