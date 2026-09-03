@@ -3,30 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Git Proxy</title>
+    <title>Git Proxy - Octocat Data</title>
     <style>
-        body { font-family: monospace; background: #1a1a1a; color: #00ff00; padding: 20px; }
-        #login { max-width: 400px; margin: 0 auto; }
-        input { width: 100%; padding: 10px; margin: 5px 0; background: #333; color: white; border: 1px solid #555; }
-        button { padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; }
-        button:hover { background: #0056b3; }
-        #content { margin-top: 20px; white-space: pre-wrap; word-break: break-all; background: #222; padding: 10px; border: 1px solid #444; }
-        #error { color: #ff4444; margin-top: 10px; }
+        body { font-family: 'Courier New', Courier, monospace; background: #0d1117; color: #58a6ff; padding: 20px; }
+        #login { max-width: 400px; margin: 50px auto; text-align: center; }
+        input { width: 80%; padding: 10px; margin: 10px 0; background: #161b22; color: #fff; border: 1px solid #30363d; border-radius: 6px; }
+        button { padding: 10px 20px; background: #238636; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #2ea043; }
+        #content { margin-top: 20px; background: #0d1117; border: 1px solid #30363d; padding: 15px; border-radius: 6px; overflow: auto; max-height: 80vh; }
+        #error { color: #ff7b72; margin-top: 10px; }
+        pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; color: #79c0ff; }
     </style>
 </head>
 <body>
 
     <div id="login">
-        <h2>Enter Password</h2>
-        <input type="password" id="password" placeholder="Password">
-        <button onclick="unlock()">Unlock Proxy</button>
+        <h2>🔒 Git Proxy Lock</h2>
+        <input type="password" id="password" placeholder="Enter Password">
+        <br>
+        <button onclick="unlock()">Unlock</button>
         <div id="error"></div>
     </div>
 
-    <div id="content" style="display:none;"></div>
+    <div id="content" style="display:none;">
+        <h3>📦 Repository Data (octocat/Hello-World)</h3>
+        <pre id="data-output"></pre>
+    </div>
 
     <script>
         const CORRECT_PASSWORD = "wyatt";
+        // The URL from the image: API endpoint for octocat/Hello-World
+        const TARGET_URL = "https://api.github.com/repos/octocat/Hello-World";
 
         function unlock() {
             const input = document.getElementById('password').value;
@@ -37,27 +44,39 @@
                 document.getElementById('content').style.display = 'block';
                 errorDiv.textContent = '';
                 
-                // Fetch a default example URL to show it works
-                fetchContent('https://api.github.com/repos/octocat/Hello-World');
+                // Fetch the data
+                fetchContent(TARGET_URL);
             } else {
-                errorDiv.textContent = 'Incorrect password';
+                errorDiv.textContent = '❌ Incorrect password';
             }
         }
 
         async function fetchContent(url) {
+            const output = document.getElementById('data-output');
+            output.textContent = "Loading...";
+            
             try {
                 const response = await fetch(url);
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const data = await response.text();
-                document.getElementById('content').textContent = data;
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP Error: ${response.status}`);
+                }
+
+                // Try to parse as JSON first for nice formatting
+                try {
+                    const data = await response.json();
+                    output.textContent = JSON.stringify(data, null, 2);
+                } catch (e) {
+                    // If it's not JSON, show as text
+                    const text = await response.text();
+                    output.textContent = text;
+                }
+
             } catch (err) {
-                document.getElementById('content').textContent = `Error: ${err.message}`;
+                output.textContent = `Error: ${err.message}`;
+                console.error(err);
             }
         }
-
-        // Optional: Auto-fetch if you want a specific URL on load after login
-        // Uncomment the line below and replace the URL
-        // fetchContent('https://api.github.com/repos/your-username/your-repo');
     </script>
 </body>
 </html>
