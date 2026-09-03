@@ -3,82 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Proxy</title>
+    <title>Proxy Fix</title>
     <style>
-        :root {
-            --bg: #1a1a1a;
-            --text: #f0f0f0;
-            --accent: #007bff;
-        }
-        body {
-            margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
-        .header {
-            padding: 1rem;
-            background: #252525;
-            border-bottom: 1px solid #333;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        input {
-            flex-grow: 1;
-            padding: 10px;
-            border-radius: 4px;
-            border: 1px solid #444;
-            background: #333;
-            color: white;
-            outline: none;
-        }
-        button {
-            padding: 10px 20px;
-            background: var(--accent);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        button:hover {
-            opacity: 0.9;
-        }
-        #proxy-frame {
-            flex-grow: 1;
-            border: none;
-            background: white;
-            width: 100%;
-            height: 100%;
-        }
-        .loader {
-            display: none;
-            padding: 10px;
-            color: #888;
-            font-size: 0.9rem;
-        }
-        .error-msg {
-            display: none;
-            padding: 10px;
-            color: #ff6b6b;
-            font-size: 0.9rem;
-            text-align: center;
-        }
+        body { margin: 0; font-family: sans-serif; background: #1a1a1a; color: #fff; display: flex; flex-direction: column; height: 100vh; }
+        .header { padding: 1rem; background: #252525; border-bottom: 1px solid #333; display: flex; gap: 10px; }
+        input { flex-grow: 1; padding: 10px; border-radius: 4px; border: 1px solid #444; background: #333; color: white; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        iframe { flex-grow: 1; border: none; background: white; width: 100%; }
+        .loader { display: none; padding: 10px; color: #888; }
+        .error { display: none; padding: 10px; color: #ff6b6b; text-align: center; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <input type="text" id="urlInput" placeholder="https://example.com" value="https://example.com" />
+    <input type="text" id="urlInput" placeholder="https://example.com" />
     <button onclick="loadUrl()">Go</button>
 </div>
 <div class="loader" id="loader">Loading...</div>
-<div class="error-msg" id="errorMsg"></div>
-<iframe id="proxy-frame" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"></iframe>
+<div class="error" id="errorMsg"></div>
+<iframe id="proxy-frame" sandbox="allow-same-origin allow-scripts allow-forms allow-popups"></iframe>
 
 <script>
     const iframe = document.getElementById('proxy-frame');
@@ -86,55 +30,38 @@
     const errorMsg = document.getElementById('errorMsg');
     const input = document.getElementById('urlInput');
 
-    input.addEventListener("keypress", function(event) {
-        if (event.key === "Enter") {
-            loadUrl();
-        }
-    });
+    input.addEventListener("keypress", (e) => { if (e.key === "Enter") loadUrl(); });
 
     async function loadUrl() {
         let url = input.value.trim();
         if (!url) return;
-        
-        if (!url.startsWith('http')) {
-            url = 'https://' + url;
-        }
+        if (!url.startsWith('http')) url = 'https://' + url;
 
         loader.style.display = 'block';
         errorMsg.style.display = 'none';
-        iframe.style.opacity = '0.5';
-
-        // Use corsproxy.io which is often more reliable for full iframe embedding
-        // It proxies the request and returns the actual HTML content
-        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+        
+        // Use allorigins.win which returns JSON
+        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
 
         try {
             const response = await fetch(proxyUrl);
+            if (!response.ok) throw new Error(`Proxy Error: ${response.status}`);
             
-            if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+            const data = await response.json(); // allorigins returns JSON
             
-            const html = await response.text();
+            if (!data.contents) throw new Error("No content returned");
             
-            // Inject HTML into iframe
-            iframe.srcdoc = html;
-            
-            // Restore visibility
+            // Inject the HTML string into the iframe
+            iframe.srcdoc = data.contents;
             loader.style.display = 'none';
-            iframe.style.opacity = '1';
             
         } catch (err) {
             loader.style.display = 'none';
-            iframe.style.opacity = '1';
             errorMsg.style.display = 'block';
-            errorMsg.textContent = `Failed to load: ${err.message}. Try a different site.`;
-            
-            // Fallback: Try loading directly if the site allows it
-            iframe.src = url;
+            errorMsg.textContent = `Failed: ${err.message}`;
+            console.error(err);
         }
     }
-
-    // Initial load
-    loadUrl();
 </script>
 
 </body>
