@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Lucide Proxy</title>
+    <title>Simple Proxy</title>
     <style>
         :root {
             --bg: #1a1a1a;
@@ -51,7 +51,7 @@
         #proxy-frame {
             flex-grow: 1;
             border: none;
-            background: white; /* Most sites render better in white, we can invert if needed */
+            background: white;
             width: 100%;
             height: 100%;
         }
@@ -61,27 +61,31 @@
             color: #888;
             font-size: 0.9rem;
         }
+        .error-msg {
+            display: none;
+            padding: 10px;
+            color: #ff6b6b;
+            font-size: 0.9rem;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <input type="text" id="urlInput" placeholder="https://example.com" />
+    <input type="text" id="urlInput" placeholder="https://example.com" value="https://example.com" />
     <button onclick="loadUrl()">Go</button>
 </div>
 <div class="loader" id="loader">Loading...</div>
-<iframe id="proxy-frame" sandbox="allow-same-origin allow-scripts allow-forms allow-popups"></iframe>
+<div class="error-msg" id="errorMsg"></div>
+<iframe id="proxy-frame" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"></iframe>
 
 <script>
-    // Using a public CORS proxy. 'api.allorigins.win' is reliable for static content.
-    // For sites that need JS execution, an iframe approach with a more complex proxy is needed,
-    // but for a single file, we fetch the HTML and write it into the iframe.
-    
     const iframe = document.getElementById('proxy-frame');
     const loader = document.getElementById('loader');
+    const errorMsg = document.getElementById('errorMsg');
     const input = document.getElementById('urlInput');
 
-    // Allow "Enter" key to submit
     input.addEventListener("keypress", function(event) {
         if (event.key === "Enter") {
             loadUrl();
@@ -92,72 +96,45 @@
         let url = input.value.trim();
         if (!url) return;
         
-        // Add https if missing
         if (!url.startsWith('http')) {
             url = 'https://' + url;
         }
 
         loader.style.display = 'block';
+        errorMsg.style.display = 'none';
         iframe.style.opacity = '0.5';
 
+        // Use corsproxy.io which is often more reliable for full iframe embedding
+        // It proxies the request and returns the actual HTML content
+        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+
         try {
-            // Fetch using allorigins (adds JSON wrapper, so we parse it)
-            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-            
             const response = await fetch(proxyUrl);
             
-            if (!response.ok) throw new Error("Failed to fetch");
+            if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
             
             const html = await response.text();
             
-            // Inject into iframe
+            // Inject HTML into iframe
             iframe.srcdoc = html;
             
-            // Post-process to strip some common ad scripts (basic heuristic)
-            // This is a simple string replacement. For a robust solution, you'd need a server-side parser.
-            // We remove common ad network scripts by ID or class if possible, 
-            // but since we are client-side, we can only remove DOM elements AFTER load.
-            
-            iframe.onload = () => {
-                loader.style.display = 'none';
-                iframe.style.opacity = '1';
-                removeAds();
-            };
-
-        } catch (err) {
-            loader.innerText = "Error: " + err.message;
+            // Restore visibility
+            loader.style.display = 'none';
             iframe.style.opacity = '1';
+            
+        } catch (err) {
+            loader.style.display = 'none';
+            iframe.style.opacity = '1';
+            errorMsg.style.display = 'block';
+            errorMsg.textContent = `Failed to load: ${err.message}. Try a different site.`;
+            
+            // Fallback: Try loading directly if the site allows it
+            iframe.src = url;
         }
     }
 
-    function removeAds() {
-        // Try to remove common ad elements from the injected DOM
-        const doc = iframe.contentDocument || iframe.contentWindow.document;
-        
-        // Remove common ad selectors
-        const adSelectors = [
-            'iframe[src*="doubleclick"]',
-            'iframe[src*="ads"]',
-            'div[class*="ad"]',
-            'div[id*="ad"]',
-            'div[class*="banner"]',
-            'iframe[src*="google"]', // Google ads often
-            'script[src*="adsystem"]',
-            'script[src*="analytics"]'
-        ];
-
-        adSelectors.forEach(selector => {
-            try {
-                const elements = doc.querySelectorAll(selector);
-                elements.forEach(el => {
-                    el.remove();
-                });
-            } catch (e) {
-                // Cross-origin iframe might block access if srcdoc isn't fully same-origin
-                // But srcdoc is same-origin to the proxy page, so this usually works
-            }
-        });
-    }
+    // Initial load
+    loadUrl();
 </script>
 
 </body>
