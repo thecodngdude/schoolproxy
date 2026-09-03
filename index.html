@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git Proxy</title>
+    <style>
+        body { font-family: monospace; background: #1a1a1a; color: #00ff00; padding: 20px; }
+        #login { max-width: 400px; margin: 0 auto; }
+        input { width: 100%; padding: 10px; margin: 5px 0; background: #333; color: white; border: 1px solid #555; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        #content { margin-top: 20px; white-space: pre-wrap; word-break: break-all; background: #222; padding: 10px; border: 1px solid #444; }
+        #error { color: #ff4444; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="login">
+        <h2>Enter Password</h2>
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="unlock()">Unlock Proxy</button>
+        <div id="error"></div>
+    </div>
+
+    <div id="content" style="display:none;"></div>
+
+    <script>
+        const CORRECT_PASSWORD = "wyatt";
+
+        function unlock() {
+            const input = document.getElementById('password').value;
+            const errorDiv = document.getElementById('error');
+            
+            if (input === CORRECT_PASSWORD) {
+                document.getElementById('login').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+                errorDiv.textContent = '';
+                
+                // Fetch a default example URL to show it works
+                fetchContent('https://api.github.com/repos/octocat/Hello-World');
+            } else {
+                errorDiv.textContent = 'Incorrect password';
+            }
+        }
+
+        async function fetchContent(url) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.text();
+                document.getElementById('content').textContent = data;
+            } catch (err) {
+                document.getElementById('content').textContent = `Error: ${err.message}`;
+            }
+        }
+
+        // Optional: Auto-fetch if you want a specific URL on load after login
+        // Uncomment the line below and replace the URL
+        // fetchContent('https://api.github.com/repos/your-username/your-repo');
+    </script>
+</body>
+</html>
