@@ -3,80 +3,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Git Proxy - Octocat Data</title>
+    <title>Simple Lucide Proxy</title>
     <style>
-        body { font-family: 'Courier New', Courier, monospace; background: #0d1117; color: #58a6ff; padding: 20px; }
-        #login { max-width: 400px; margin: 50px auto; text-align: center; }
-        input { width: 80%; padding: 10px; margin: 10px 0; background: #161b22; color: #fff; border: 1px solid #30363d; border-radius: 6px; }
-        button { padding: 10px 20px; background: #238636; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        button:hover { background: #2ea043; }
-        #content { margin-top: 20px; background: #0d1117; border: 1px solid #30363d; padding: 15px; border-radius: 6px; overflow: auto; max-height: 80vh; }
-        #error { color: #ff7b72; margin-top: 10px; }
-        pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; color: #79c0ff; }
+        :root {
+            --bg: #1a1a1a;
+            --text: #f0f0f0;
+            --accent: #007bff;
+        }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        .header {
+            padding: 1rem;
+            background: #252525;
+            border-bottom: 1px solid #333;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        input {
+            flex-grow: 1;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #444;
+            background: #333;
+            color: white;
+            outline: none;
+        }
+        button {
+            padding: 10px 20px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        #proxy-frame {
+            flex-grow: 1;
+            border: none;
+            background: white; /* Most sites render better in white, we can invert if needed */
+            width: 100%;
+            height: 100%;
+        }
+        .loader {
+            display: none;
+            padding: 10px;
+            color: #888;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 <body>
 
-    <div id="login">
-        <h2>🔒 Git Proxy Lock</h2>
-        <input type="password" id="password" placeholder="Enter Password">
-        <br>
-        <button onclick="unlock()">Unlock</button>
-        <div id="error"></div>
-    </div>
+<div class="header">
+    <input type="text" id="urlInput" placeholder="https://example.com" />
+    <button onclick="loadUrl()">Go</button>
+</div>
+<div class="loader" id="loader">Loading...</div>
+<iframe id="proxy-frame" sandbox="allow-same-origin allow-scripts allow-forms allow-popups"></iframe>
 
-    <div id="content" style="display:none;">
-        <h3>📦 Repository Data (octocat/Hello-World)</h3>
-        <pre id="data-output"></pre>
-    </div>
+<script>
+    // Using a public CORS proxy. 'api.allorigins.win' is reliable for static content.
+    // For sites that need JS execution, an iframe approach with a more complex proxy is needed,
+    // but for a single file, we fetch the HTML and write it into the iframe.
+    
+    const iframe = document.getElementById('proxy-frame');
+    const loader = document.getElementById('loader');
+    const input = document.getElementById('urlInput');
 
-    <script>
-        const CORRECT_PASSWORD = "wyatt";
-        // The URL from the image: API endpoint for octocat/Hello-World
-        const TARGET_URL = "https://api.github.com/repos/octocat/Hello-World";
+    // Allow "Enter" key to submit
+    input.addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            loadUrl();
+        }
+    });
 
-        function unlock() {
-            const input = document.getElementById('password').value;
-            const errorDiv = document.getElementById('error');
-            
-            if (input === CORRECT_PASSWORD) {
-                document.getElementById('login').style.display = 'none';
-                document.getElementById('content').style.display = 'block';
-                errorDiv.textContent = '';
-                
-                // Fetch the data
-                fetchContent(TARGET_URL);
-            } else {
-                errorDiv.textContent = '❌ Incorrect password';
-            }
+    async function loadUrl() {
+        let url = input.value.trim();
+        if (!url) return;
+        
+        // Add https if missing
+        if (!url.startsWith('http')) {
+            url = 'https://' + url;
         }
 
-        async function fetchContent(url) {
-            const output = document.getElementById('data-output');
-            output.textContent = "Loading...";
+        loader.style.display = 'block';
+        iframe.style.opacity = '0.5';
+
+        try {
+            // Fetch using allorigins (adds JSON wrapper, so we parse it)
+            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
             
+            const response = await fetch(proxyUrl);
+            
+            if (!response.ok) throw new Error("Failed to fetch");
+            
+            const html = await response.text();
+            
+            // Inject into iframe
+            iframe.srcdoc = html;
+            
+            // Post-process to strip some common ad scripts (basic heuristic)
+            // This is a simple string replacement. For a robust solution, you'd need a server-side parser.
+            // We remove common ad network scripts by ID or class if possible, 
+            // but since we are client-side, we can only remove DOM elements AFTER load.
+            
+            iframe.onload = () => {
+                loader.style.display = 'none';
+                iframe.style.opacity = '1';
+                removeAds();
+            };
+
+        } catch (err) {
+            loader.innerText = "Error: " + err.message;
+            iframe.style.opacity = '1';
+        }
+    }
+
+    function removeAds() {
+        // Try to remove common ad elements from the injected DOM
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        
+        // Remove common ad selectors
+        const adSelectors = [
+            'iframe[src*="doubleclick"]',
+            'iframe[src*="ads"]',
+            'div[class*="ad"]',
+            'div[id*="ad"]',
+            'div[class*="banner"]',
+            'iframe[src*="google"]', // Google ads often
+            'script[src*="adsystem"]',
+            'script[src*="analytics"]'
+        ];
+
+        adSelectors.forEach(selector => {
             try {
-                const response = await fetch(url);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP Error: ${response.status}`);
-                }
-
-                // Try to parse as JSON first for nice formatting
-                try {
-                    const data = await response.json();
-                    output.textContent = JSON.stringify(data, null, 2);
-                } catch (e) {
-                    // If it's not JSON, show as text
-                    const text = await response.text();
-                    output.textContent = text;
-                }
-
-            } catch (err) {
-                output.textContent = `Error: ${err.message}`;
-                console.error(err);
+                const elements = doc.querySelectorAll(selector);
+                elements.forEach(el => {
+                    el.remove();
+                });
+            } catch (e) {
+                // Cross-origin iframe might block access if srcdoc isn't fully same-origin
+                // But srcdoc is same-origin to the proxy page, so this usually works
             }
-        }
-    </script>
+        });
+    }
+</script>
+
 </body>
 </html>
