@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Proxy Fix</title>
+    <title>Proxy Fix 408</title>
     <style>
         body { margin: 0; font-family: sans-serif; background: #1a1a1a; color: #fff; display: flex; flex-direction: column; height: 100vh; }
         .header { padding: 1rem; background: #252525; border-bottom: 1px solid #333; display: flex; gap: 10px; }
@@ -40,26 +40,31 @@
         loader.style.display = 'block';
         errorMsg.style.display = 'none';
         
-        // Use allorigins.win which returns JSON
+        // Use allorigins.win with JSON endpoint
         const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
 
+        // Add a timeout to avoid hanging forever
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
         try {
-            const response = await fetch(proxyUrl);
+            const response = await fetch(proxyUrl, { signal: controller.signal });
+            clearTimeout(timeoutId);
+
             if (!response.ok) throw new Error(`Proxy Error: ${response.status}`);
             
-            const data = await response.json(); // allorigins returns JSON
+            const data = await response.json();
             
             if (!data.contents) throw new Error("No content returned");
             
-            // Inject the HTML string into the iframe
             iframe.srcdoc = data.contents;
             loader.style.display = 'none';
             
         } catch (err) {
+            clearTimeout(timeoutId);
             loader.style.display = 'none';
             errorMsg.style.display = 'block';
-            errorMsg.textContent = `Failed: ${err.message}`;
-            console.error(err);
+            errorMsg.textContent = `Failed: ${err.message}. Try a different site.`;
         }
     }
 </script>
