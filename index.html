@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Proxy Fix 408</title>
+    <title>Proxy Fix 408/Abort</title>
     <style>
         body { margin: 0; font-family: sans-serif; background: #1a1a1a; color: #fff; display: flex; flex-direction: column; height: 100vh; }
         .header { padding: 1rem; background: #252525; border-bottom: 1px solid #333; display: flex; gap: 10px; }
@@ -43,9 +43,9 @@
         // Use allorigins.win with JSON endpoint
         const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
 
-        // Add a timeout to avoid hanging forever
+        // Increase timeout to 30 seconds
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
         try {
             const response = await fetch(proxyUrl, { signal: controller.signal });
@@ -64,7 +64,16 @@
             clearTimeout(timeoutId);
             loader.style.display = 'none';
             errorMsg.style.display = 'block';
-            errorMsg.textContent = `Failed: ${err.message}. Try a different site.`;
+            
+            // Provide specific feedback
+            if (err.name === 'AbortError') {
+                errorMsg.textContent = `Timeout: The proxy took too long (>30s). Try a simpler site like example.com.`;
+            } else {
+                errorMsg.textContent = `Failed: ${err.message}`;
+            }
+            
+            // Fallback: Try direct iframe load (might work if the site allows it)
+            iframe.src = url;
         }
     }
 </script>
